@@ -1,0 +1,18 @@
+@page "/"
+
+<PageTitle>Insured Fortuity</PageTitle>
+
+<div class="row">
+    <div class="col-lg-7">
+        <h1>Insured Fortuity</h1>
+        <p class="lead">Motor and home insurance for the pragmatically prepared.</p>
+        <p>
+            Use the quick quote panel for an instant premium estimate, or head to
+            <a href="quotes">Quotes</a> to draft a full quote for an existing customer.
+            Claims handling lives under <a href="claims">Claims</a>.
+        </p>
+    </div>
+    <div class="col-lg-5">
+        <QuickQuoteWidget @rendermode="InteractiveServer" />
+    </div>
+</div>

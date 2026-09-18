@@ -1,0 +1,125 @@
+@page "/quotes"
+@rendermode InteractiveServer
+@inject FortuityApiClient Api
+
+<PageTitle>Quotes</PageTitle>
+
+<h1>Draft a quote</h1>
+
+@if (_loadError is not null)
+{
+    <div class="alert alert-warning">@_loadError</div>
+}
+
+<div class="row g-3 align-items-end">
+    <div class="col-md-4">
+        <label class="form-label" for="q-customer">Customer</label>
+        <select id="q-customer" class="form-select" @bind="_customerNumber">
+            <option value="">— select —</option>
+            @foreach (var customer in _customers)
+            {
+                <option value="@customer.CustomerNumber">@customer.Name (@customer.CustomerNumber)</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label" for="q-type">Cover</label>
+        <select id="q-type" class="form-select" @bind="_policyType">
+            <option value="Motor">Motor</option>
+            <option value="Home">Home</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label" for="q-coverage">Level</label>
+        <select id="q-coverage" class="form-select" @bind="_coverage">
+            <option value="Basic">Basic</option>
+            <option value="Standard">Standard</option>
+            <option value="Plus">Plus</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label" for="q-age">Age (years)</label>
+        <input id="q-age" type="number" class="form-control" min="0" max="99" @bind="_ageYears" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label" for="q-bonus">Claim-free years</label>
+        <input id="q-bonus" type="number" class="form-control" min="0" max="40" @bind="_noClaimsYears" />
+    </div>
+</div>
+
+<button class="btn btn-primary mt-3" @onclick="DraftAsync" disabled="@(_busy || string.IsNullOrEmpty(_customerNumber))">
+    @(_busy ? "Rating…" : "Draft quote")
+</button>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mt-3">@_error</div>
+}
+
+@if (_quote is not null)
+{
+    <div class="card mt-4">
+        <div class="card-header">
+            Quote #@_quote.Id — <StatusBadge Status="@_quote.BasisUsed" /> basis
+        </div>
+        <div class="card-body">
+            <p class="fs-3 mb-1"><MoneyDisplay Amount="_quote.AnnualPremium" /> <span class="fs-6 text-muted">/ year</span></p>
+            <table class="table table-sm w-auto">
+                <tbody>
+                    <tr><td>Base premium</td><td class="text-end"><MoneyDisplay Amount="_quote.Breakdown.BasePremium" /></td></tr>
+                    <tr><td>Risk factor</td><td class="text-end">× @_quote.Breakdown.RiskMultiplier</td></tr>
+                    <tr><td>Coverage level</td><td class="text-end">× @_quote.Breakdown.CoverageMultiplier</td></tr>
+                    <tr><td>No-claims bonus</td><td class="text-end">× @_quote.Breakdown.NoClaimsMultiplier</td></tr>
+                    <tr><td>Regional factor (@_quote.Region)</td><td class="text-end">× @_quote.Breakdown.RegionalMultiplier</td></tr>
+                    <tr class="table-active"><td>Annual premium</td><td class="text-end"><MoneyDisplay Amount="_quote.Breakdown.FinalPremium" /></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<CustomerSummary> _customers = [];
+    private string? _loadError;
+    private string _customerNumber = "";
+    private string _policyType = "Motor";
+    private string _coverage = "Standard";
+    private int _ageYears = 5;
+    private int _noClaimsYears = 5;
+    private bool _busy;
+    private string? _error;
+    private QuoteResult? _quote;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var call = await Api.ListCustomersAsync();
+        if (call.Succeeded)
+        {
+            _customers = call.Value!;
+        }
+        else
+        {
+            _loadError = call.Error;
+        }
+    }
+
+    private async Task DraftAsync()
+    {
+        _busy = true;
+        _error = null;
+        _quote = null;
+
+        var call = await Api.DraftQuoteAsync(new DraftQuotePayload(
+            _customerNumber, _policyType, _coverage, _ageYears, _noClaimsYears));
+
+        _busy = false;
+        if (call.Succeeded)
+        {
+            _quote = call.Value;
+        }
+        else
+        {
+            _error = call.Error;
+        }
+    }
+}

@@ -1,0 +1,15 @@
+<span class="badge @BadgeClass">@Status</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Status { get; set; }
+
+    private string BadgeClass => Status switch
+    {
+        "Active" or "Approved" or "Synced" or "Settled" => "text-bg-success",
+        "Draft" or "Registered" or "Pending" or "NeverSynced" => "text-bg-secondary",
+        "UnderReview" => "text-bg-info",
+        "Lapsed" or "Failed" or "Rejected" or "Cancelled" => "text-bg-danger",
+        _ => "text-bg-light",
+    };
+}

@@ -1,0 +1,87 @@
+@page "/policies"
+@rendermode InteractiveServer
+@inject FortuityApiClient Api
+
+<PageTitle>Policies</PageTitle>
+
+<h1>Policies</h1>
+
+@if (_loadError is not null)
+{
+    <div class="alert alert-warning">@_loadError</div>
+}
+
+<div class="col-md-4">
+    <label class="form-label" for="p-customer">Customer</label>
+    <select id="p-customer" class="form-select" @bind="_customerNumber" @bind:after="LoadPoliciesAsync">
+        <option value="">— select —</option>
+        @foreach (var customer in _customers)
+        {
+            <option value="@customer.CustomerNumber">@customer.Name (@customer.CustomerNumber)</option>
+        }
+    </select>
+</div>
+
+@if (_detail is not null)
+{
+    <div class="mt-4">
+        <h2>@_detail.Customer.Name</h2>
+        <p class="text-muted">
+            @_detail.Customer.City, region @_detail.Customer.Region —
+            pricing basis <StatusBadge Status="@_detail.Customer.PricingBasis" />
+        </p>
+
+        <FortuityGrid Items="_detail.Policies" TItem="PolicySummary" EmptyMessage="No policies for this customer.">
+            <HeaderTemplate>
+                <th>Number</th><th>Type</th><th>Coverage</th><th>Status</th><th>Starts</th><th class="text-end">Annual premium</th>
+            </HeaderTemplate>
+            <RowTemplate Context="policy">
+                <td>@policy.Number</td>
+                <td>@policy.Type</td>
+                <td>@policy.Coverage</td>
+                <td><StatusBadge Status="@policy.Status" /></td>
+                <td>@policy.StartsOn.ToString("yyyy-MM-dd")</td>
+                <td class="text-end"><MoneyDisplay Amount="policy.AnnualPremium" /></td>
+            </RowTemplate>
+        </FortuityGrid>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<CustomerSummary> _customers = [];
+    private string? _loadError;
+    private string _customerNumber = "";
+    private CustomerDetail? _detail;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var call = await Api.ListCustomersAsync();
+        if (call.Succeeded)
+        {
+            _customers = call.Value!;
+        }
+        else
+        {
+            _loadError = call.Error;
+        }
+    }
+
+    private async Task LoadPoliciesAsync()
+    {
+        _detail = null;
+        if (string.IsNullOrEmpty(_customerNumber))
+        {
+            return;
+        }
+
+        var call = await Api.GetCustomerAsync(_customerNumber);
+        if (call.Succeeded)
+        {
+            _detail = call.Value;
+        }
+        else
+        {
+            _loadError = call.Error;
+        }
+    }
+}

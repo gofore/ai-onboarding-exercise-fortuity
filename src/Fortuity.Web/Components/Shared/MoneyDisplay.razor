@@ -1,0 +1,10 @@
+@using System.Globalization
+
+<span class="money">@Amount.ToString("C", FinnishCulture)</span>
+
+@code {
+    private static readonly CultureInfo FinnishCulture = CultureInfo.GetCultureInfo("fi-FI");
+
+    [Parameter, EditorRequired]
+    public decimal Amount { get; set; }
+}

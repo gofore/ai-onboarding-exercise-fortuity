@@ -1,0 +1,67 @@
+@Fortuity.Api_HostAddress = http://localhost:5015
+
+### Health probe
+GET {{Fortuity.Api_HostAddress}}/health
+Accept: application/json
+
+### List customers
+GET {{Fortuity.Api_HostAddress}}/api/customers
+Accept: application/json
+
+### Customer detail with policies
+GET {{Fortuity.Api_HostAddress}}/api/customers/CUST-100001
+Accept: application/json
+
+### Draft a quote (rates on the customer's preferred basis)
+POST {{Fortuity.Api_HostAddress}}/api/quotes
+Content-Type: application/json
+
+{
+  "customerNumber": "CUST-100001",
+  "policyType": "Motor",
+  "coverage": "Standard",
+  "ageYears": 5,
+  "noClaimsYears": 5
+}
+
+### Quick indication — Local basis
+POST {{Fortuity.Api_HostAddress}}/api/quotes/indication
+Content-Type: application/json
+
+{
+  "policyType": "Motor",
+  "coverage": "Standard",
+  "region": "FI-01",
+  "basis": "Local",
+  "ageYears": 5,
+  "noClaimsYears": 5
+}
+
+### Quick indication — Nordic basis (same inputs, different tariff)
+POST {{Fortuity.Api_HostAddress}}/api/quotes/indication
+Content-Type: application/json
+
+{
+  "policyType": "Motor",
+  "coverage": "Standard",
+  "region": "FI-01",
+  "basis": "Nordic",
+  "ageYears": 5,
+  "noClaimsYears": 5
+}
+
+### Register a claim (FNOL)
+POST {{Fortuity.Api_HostAddress}}/api/claims
+Content-Type: application/json
+
+{
+  "policyNumber": "POL-2026-000002",
+  "type": "Collision",
+  "incidentDate": "2026-07-15"
+}
+
+### List open claims
+GET {{Fortuity.Api_HostAddress}}/api/claims/open
+Accept: application/json
+
+###

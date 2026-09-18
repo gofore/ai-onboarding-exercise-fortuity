@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "5015:8080"
+    volumes:
+      - fortuity-data:/data
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q '200 OK' <&3"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "5044:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  fortuity-data:

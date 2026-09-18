@@ -1,0 +1,34 @@
+@typeparam TItem
+
+<table class="table table-striped fortuity-grid">
+    <thead>
+        <tr>@HeaderTemplate</tr>
+    </thead>
+    <tbody>
+        @if (Items.Count == 0)
+        {
+            <tr><td colspan="12" class="text-muted fst-italic">@EmptyMessage</td></tr>
+        }
+        else
+        {
+            @foreach (var item in Items)
+            {
+                <tr>@RowTemplate(item)</tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<TItem> Items { get; set; }
+
+    [Parameter, EditorRequired]
+    public required RenderFragment HeaderTemplate { get; set; }
+
+    [Parameter, EditorRequired]
+    public required RenderFragment<TItem> RowTemplate { get; set; }
+
+    [Parameter]
+    public string EmptyMessage { get; set; } = "Nothing to show.";
+}

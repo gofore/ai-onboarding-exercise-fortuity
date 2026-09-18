@@ -1,0 +1,177 @@
+@page "/claims"
+@rendermode InteractiveServer
+@inject FortuityApiClient Api
+
+<PageTitle>Claims</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Open claims</h1>
+    <button class="btn btn-outline-primary" @onclick="RequestSyncAsync" disabled="@_syncBusy">
+        @(_syncBusy ? "Queuing…" : "Sync with repair network")
+    </button>
+</div>
+
+@if (_syncMessage is not null)
+{
+    <div class="alert alert-info py-2">@_syncMessage</div>
+}
+
+@if (_loadError is not null)
+{
+    <div class="alert alert-warning">@_loadError</div>
+}
+
+<FortuityGrid Items="_claims" TItem="ClaimSummary" EmptyMessage="No open claims.">
+    <HeaderTemplate>
+        <th>Number</th><th>Type</th><th>Status</th><th>Incident</th><th class="text-end">Reserve</th><th class="text-end">Paid</th>
+    </HeaderTemplate>
+    <RowTemplate Context="claim">
+        <td>@claim.Number</td>
+        <td>@claim.Type</td>
+        <td><StatusBadge Status="@claim.Status" /></td>
+        <td>@claim.IncidentDate.ToString("yyyy-MM-dd")</td>
+        <td class="text-end"><MoneyDisplay Amount="claim.ReserveAmount" /></td>
+        <td class="text-end"><MoneyDisplay Amount="claim.PaidAmount" /></td>
+    </RowTemplate>
+</FortuityGrid>
+
+<h2 class="mt-5">Partner network</h2>
+
+<div class="d-flex justify-content-end mb-2">
+    <button class="btn btn-outline-secondary btn-sm" @onclick="LoadShopsAsync">Refresh status</button>
+</div>
+
+<FortuityGrid Items="_shops" TItem="RepairShopStatus" EmptyMessage="No partner shops registered.">
+    <HeaderTemplate>
+        <th>Reference</th><th>Shop</th><th>City</th><th>Sync state</th><th>Last synced</th><th>Error</th>
+    </HeaderTemplate>
+    <RowTemplate Context="shop">
+        <td>@shop.PartnerReference</td>
+        <td>@shop.Name</td>
+        <td>@shop.City</td>
+        <td><StatusBadge Status="@shop.SyncState" /></td>
+        <td>@(shop.LastSyncedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+        <td class="text-danger small">@shop.LastSyncError</td>
+    </RowTemplate>
+</FortuityGrid>
+
+<h2 class="mt-5">Report a new claim</h2>
+
+<div class="row g-3 align-items-end">
+    <div class="col-md-3">
+        <label class="form-label" for="c-policy">Policy number</label>
+        <input id="c-policy" class="form-control" placeholder="POL-2026-000001" @bind="_policyNumber" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="c-type">Claim type</label>
+        <select id="c-type" class="form-select" @bind="_claimType">
+            <option value="Collision">Collision</option>
+            <option value="Theft">Theft</option>
+            <option value="Fire">Fire</option>
+            <option value="WaterDamage">Water damage</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="c-date">Incident date</label>
+        <input id="c-date" type="date" class="form-control" @bind="_incidentDate" />
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-primary" @onclick="RegisterAsync" disabled="@_busy">
+            @(_busy ? "Registering…" : "Register claim")
+        </button>
+    </div>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mt-3">@_error</div>
+}
+@if (_registered is not null)
+{
+    <div class="alert alert-success mt-3">
+        Claim <strong>@_registered.Number</strong> registered with an initial reserve of
+        <MoneyDisplay Amount="_registered.ReserveAmount" />.
+    </div>
+}
+
+@code {
+    private IReadOnlyList<ClaimSummary> _claims = [];
+    private IReadOnlyList<RepairShopStatus> _shops = [];
+    private string? _loadError;
+    private string _policyNumber = "";
+    private string _claimType = "Collision";
+    private DateOnly _incidentDate = new(2026, 8, 1);
+    private bool _busy;
+    private bool _syncBusy;
+    private string? _syncMessage;
+    private string? _error;
+    private ClaimSummary? _registered;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClaimsAsync();
+        await LoadShopsAsync();
+    }
+
+    private async Task LoadShopsAsync()
+    {
+        var call = await Api.ListRepairShopStatusAsync();
+        if (call.Succeeded)
+        {
+            _shops = call.Value!;
+        }
+        else
+        {
+            _loadError = call.Error;
+        }
+    }
+
+    private async Task RequestSyncAsync()
+    {
+        _syncBusy = true;
+        _syncMessage = null;
+
+        var call = await Api.RequestClaimsSyncAsync();
+
+        _syncBusy = false;
+        _syncMessage = call.Succeeded
+            ? $"Sync queued for {call.Value!.ShopCount} shops (ticket {call.Value.TicketId.ToString()[..8]}…). Refresh the status below to follow progress."
+            : call.Error;
+
+        await LoadShopsAsync();
+    }
+
+    private async Task LoadClaimsAsync()
+    {
+        var call = await Api.ListOpenClaimsAsync();
+        if (call.Succeeded)
+        {
+            _claims = call.Value!;
+        }
+        else
+        {
+            _loadError = call.Error;
+        }
+    }
+
+    private async Task RegisterAsync()
+    {
+        _busy = true;
+        _error = null;
+        _registered = null;
+
+        var call = await Api.RegisterClaimAsync(new FnolPayload(_policyNumber, _claimType, _incidentDate));
+
+        _busy = false;
+        if (call.Succeeded)
+        {
+            _registered = call.Value;
+            await LoadClaimsAsync();
+        }
+        else
+        {
+            _error = call.Error;
+        }
+    }
+}

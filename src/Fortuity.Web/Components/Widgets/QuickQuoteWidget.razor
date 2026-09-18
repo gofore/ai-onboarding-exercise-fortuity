@@ -1,0 +1,96 @@
+@inject FortuityApiClient Api
+
+<div class="card quick-quote">
+    <div class="card-header">Quick quote</div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-6">
+                <label class="form-label" for="qq-type">Cover</label>
+                <select id="qq-type" class="form-select form-select-sm" @bind="_policyType">
+                    <option value="Motor">Motor</option>
+                    <option value="Home">Home</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <label class="form-label" for="qq-coverage">Level</label>
+                <select id="qq-coverage" class="form-select form-select-sm" @bind="_coverage">
+                    <option value="Basic">Basic</option>
+                    <option value="Standard">Standard</option>
+                    <option value="Plus">Plus</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <label class="form-label" for="qq-region">Region</label>
+                <select id="qq-region" class="form-select form-select-sm" @bind="_region">
+                    <option value="FI-01">Uusimaa (FI-01)</option>
+                    <option value="FI-02">Varsinais-Suomi (FI-02)</option>
+                    <option value="FI-03">Pirkanmaa (FI-03)</option>
+                    <option value="FI-19">Pohjois-Pohjanmaa (FI-19)</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <label class="form-label" for="qq-basis">Pricing basis</label>
+                <select id="qq-basis" class="form-select form-select-sm" @bind="_basis">
+                    <option value="local">Local</option>
+                    <option value="nordic">Nordic</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <label class="form-label" for="qq-age">Age (years)</label>
+                <input id="qq-age" type="number" class="form-control form-control-sm" min="0" max="99" @bind="_ageYears" />
+            </div>
+            <div class="col-6">
+                <label class="form-label" for="qq-bonus">Claim-free years</label>
+                <input id="qq-bonus" type="number" class="form-control form-control-sm" min="0" max="40" @bind="_noClaimsYears" />
+            </div>
+        </div>
+        <button class="btn btn-primary btn-sm mt-3" @onclick="EstimateAsync" disabled="@_busy">
+            @(_busy ? "Calculating…" : "Estimate premium")
+        </button>
+
+        @if (_error is not null)
+        {
+            <div class="alert alert-warning mt-3 mb-0 py-2">@_error</div>
+        }
+        else if (_result is not null)
+        {
+            <div class="mt-3">
+                <span class="fs-4"><MoneyDisplay Amount="_result.AnnualPremium" /></span>
+                <span class="text-muted"> / year</span>
+                <div class="text-muted small">@_result.Basis basis, region @_result.Region</div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string _policyType = "Motor";
+    private string _coverage = "Standard";
+    private string _region = "FI-01";
+    private string _basis = "local";
+    private int _ageYears = 5;
+    private int _noClaimsYears = 5;
+    private bool _busy;
+    private string? _error;
+    private IndicationResult? _result;
+
+    private async Task EstimateAsync()
+    {
+        _busy = true;
+        _error = null;
+        _result = null;
+
+        var call = await Api.GetIndicationAsync(new IndicationPayload(
+            _policyType, _coverage, _region, _basis, _ageYears, _noClaimsYears));
+
+        _busy = false;
+        if (call.Succeeded)
+        {
+            _result = call.Value;
+        }
+        else
+        {
+            _error = call.Error;
+        }
+    }
+}
