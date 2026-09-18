@@ -13,7 +13,7 @@ Harjoitus AI-koodausagentin käyttöön tilanteessa, jossa kehittäjä tulee uut
 - 1. Selvitä: mikä tämä on ja mitä se tekee?
 - 2. Käynnistä: saa sovellus pyörimään ja todenna, että se vastaa
 - 3. Dokumentoi: README, jossa arkkitehtuurikuva (Mermaid), käynnistysohje ja API:n pääkohdat
-- Bonus: tee dokumentaatiostasi pull request, kouluttaja tai tiimikaveri katselmoi
+- Bonus: tee dokumentaatiostasi pull request, kouluttaja tai tiimikaveri katselmoi. Vaadi agentilta englanninkieliset conventional commit -viestit scopella ja PR-kuvaus kiintein otsikoin (pitkässä versiossa valmis ohje agentille)
 - Pohdi: missä agentti oli hyvä, missä se meni metsään, mitä tarkistit itse?
 
 ---
@@ -43,7 +43,22 @@ Tee koko tehtävä AI-koodausagentilla (esimerkiksi Codex, Claude Code tai vasta
    - API:n pääkohdat
    - "uuden kehittäjän huomiot": mitä yllättävää, epäselvää tai riskialtista koodista löytyi.
 
-4. **Bonus 1: pull request.** Tee dokumentaatiostasi pull request tähän repoon tai omaan forkkiisi, ja pyydä kouluttajaa tai tiimikaveria katselmoimaan se. Merkitse PR:n kuvaukseen, että se on tehty AI-avusteisesti.
+4. **Bonus 1: pull request.** Tee dokumentaatiostasi pull request tähän repoon tai omaan forkkiisi, ja pyydä kouluttajaa tai tiimikaveria katselmoimaan se. Commit-viestit ja PR-kuvaus kirjoitetaan englanniksi, joten anna agentille myös vaatimukset englanniksi. Alla oleva teksti on sellaisenaan kopioitavissa agentille tehtävän alussa, tai vielä parempi, tallennettavissa repon agenttiohjeeseen (`AGENTS.md`), jolloin se pätee jokaisessa sessiossa:
+
+   ```text
+   Commit messages follow the Conventional Commits format with a mandatory scope:
+   `type(scope): description`, for example `docs(readme): add architecture diagram`.
+   Allowed types: feat, fix, docs, test, refactor, perf, build, ci, chore.
+   The scope names the part of the codebase the change affects.
+   Write commit messages and pull request descriptions in English.
+
+   Every pull request description uses these headers, in this order:
+   - Background: where the task came from (ticket, exercise, observed problem)
+   - What was done: the changes in a few sentences, not a file list
+   - How it was verified: what was run and what was observed (tests, startup, curl checks)
+   - Notes for the reviewer: open questions, assumptions made, deliberately left out
+   - AI assistance: which parts the agent produced and what the author checked personally
+   ```
 
 5. **Bonus 2: testi ensin.** Pyydä agenttia etsimään koodista yksi bugi tai epäjohdonmukaisuus ja kirjoittamaan sille ensin epäonnistuva testi, sitten korjaus. Aja testit Dockerin sisällä.
 
