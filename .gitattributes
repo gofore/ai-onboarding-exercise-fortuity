@@ -1,0 +1,13 @@
+# Normalise line endings so Docker reads LF on every platform, including
+# Windows checkouts with core.autocrlf=true.
+* text=auto
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.sh text eol=lf
+
+# Keep binaries untouched.
+*.png binary
+*.ico binary
+*.db binary
