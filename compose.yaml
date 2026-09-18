@@ -24,5 +24,21 @@ services:
       api:
         condition: service_healthy
 
+  # Runs the test suite in the SDK image. Not started by `docker compose up`;
+  # invoke with `docker compose run --rm test`.
+  test:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    profiles: [test]
+    working_dir: /src
+    volumes:
+      - .:/src
+      - nuget-cache:/root/.nuget/packages
+    # --force re-resolves packages so restore metadata left by a host SDK
+    # (different cache path) never leaks into the container run.
+    command: >
+      sh -c "dotnet restore --force
+      && dotnet test --no-restore --logger 'console;verbosity=normal'"
+
 volumes:
   fortuity-data:
+  nuget-cache:

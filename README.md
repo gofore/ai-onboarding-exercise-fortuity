@@ -17,6 +17,16 @@ docker compose up
 
 Stop with `docker compose down`. Add `-v` to also reset the database.
 
+## Tests
+
+The test suite runs in the .NET SDK container, so nothing needs to be installed:
+
+```bash
+docker compose run --rm test
+```
+
+The first run downloads the SDK image and NuGet packages. Later runs reuse the cached packages.
+
 ## Notes
 
 - All data is fictional. The application does not represent any real organisation.

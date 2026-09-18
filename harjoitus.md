@@ -60,7 +60,7 @@ Tee koko tehtävä AI-koodausagentilla (esimerkiksi Codex, Claude Code tai vasta
    - AI assistance: which parts the agent produced and what the author checked personally
    ```
 
-5. **Bonus 2: testi ensin.** Pyydä agenttia etsimään koodista yksi bugi tai epäjohdonmukaisuus ja kirjoittamaan sille ensin epäonnistuva testi, sitten korjaus. Aja testit Dockerin sisällä.
+5. **Bonus 2: testi ensin.** Pyydä agenttia etsimään koodista yksi bugi tai epäjohdonmukaisuus ja kirjoittamaan sille ensin epäonnistuva testi, sitten korjaus. Aja testit Dockerin sisällä komennolla `docker compose run --rm test`.
 
 ### Muista
 
